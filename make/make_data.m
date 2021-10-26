@@ -64,8 +64,10 @@ for n = 1:N.file
     pat_norm = interp1(time_sync, pat_pos, tintrp);
     body_filt = filtfilt(b, a, body_norm);
     pat_filt = filtfilt(b, a, pat_norm);
-    body_filt = body_filt - body_filt(1);
+    %body_filt = body_filt - body_filt(1);
     pat_filt = pat_filt - pat_filt(1);
+    
+    body_filt = rad2deg(wrapToPi(deg2rad(body_filt)));
     
     DATA.time{n} = tintrp - tintrp(1);
     DATA.pattern{n} = pat_filt;
@@ -84,25 +86,46 @@ for n = 1:N.trial
     end
 end
 
+R = 180;
+sz = 10;
+hbins = (-R - sz/2):sz:(R + sz/2); 
+cc = hsv(N.fly);
+
 fig = figure (1); clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', [2 2 6 6])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', [2 2 8 6])
 clear ax h
-ax = gobjects(N.trial,1);
+ax = gobjects(N.trial,2);
 for n = 1:N.trial
-    ax(n) = subplot(N.trial,1,n); cla ; hold on
+    subI1 = (3*n - 2):(3*n - 1);
+    ax(n,1) = subplot(N.trial,3,subI1); cla ; hold on
     title(class(n))
-        h.trial{n} = plot(FLY.(class(n)).time, FLY.(class(n)).body);
-        set(h.trial{n}, {'Color'}, num2cell(hsv(N.fly),2))
-    ax(n).XLim(1) = -0.02*FLY.(class(n)).time(end);
+        h.trial{n} = plot(FLY.(class(n)).time, FLY.(class(n)).body, '.');
+        set(h.trial{n}, {'Color'}, num2cell(cc,2))
+    ax(n,1).XLim(1) = -0.02*FLY.(class(n)).time(end);
+    
+    ax(n,2) = subplot(N.trial,3,3*n); cla ; hold on
+        for f = 1:N.fly
+            h.hist(n,f) = histogram(FLY.(class(n)).body(:,f), hbins, 'Normalization', 'probability', ...
+                'EdgeColor', 'none', 'FaceColor', cc(f,:));
+        end
+        ax(n,2).YLim(1) = -0.02;
 end
-xlabel('time (s)')
+cellfun(@(x) set(x, 'LineWidth', 0.5, 'MarkerFaceColor', 'none', 'MarkerSize', 2), h.trial)
+set(ax, 'Color', 'none', 'LineWidth', 1)
+% set(ax(1:end-1,1), 'XColor', 'none')
+set(ax(:,2), 'XLim', 200*[-1 1], 'XTick', -180:90:180)
+set(ax(:,1), 'YLim', 200*[-1 1], 'YTick', -180:90:180)
+
+linkaxes(ax(:,2), 'xy')
+
+XLabelHC = get(ax(N.trial,1), 'XLabel');
+set(XLabelHC, 'String', 'time (s)')
 
 YLabelHC = get(ax(2,1), 'YLabel');
-set(YLabelHC, 'String', 'Body (°)')
+set(YLabelHC, 'String', 'body (°)')
 
-cellfun(@(x) set(x, 'LineWidth', 1), h.trial)
-set(ax, 'Color', 'none', 'LineWidth', 1)
-set(ax(1:end-1), 'XColor', 'none')
+YLabelHC = get(ax(2,2), 'YLabel');
+set(YLabelHC, 'String', 'probability')
 
 leg = legend(h.trial{1}, string(1:N.fly));
 leg.Title.String = 'Fly #';
