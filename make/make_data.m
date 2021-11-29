@@ -67,7 +67,7 @@ for n = 1:N.file
     %body_filt = body_filt - body_filt(1);
     pat_filt = pat_filt - pat_filt(1);
     
-    body_filt = rad2deg(wrapToPi(deg2rad(body_filt)));
+    %body_filt = rad2deg(wrapToPi(deg2rad(body_filt)));
     
     DATA.time{n} = tintrp - tintrp(1);
     DATA.pattern{n} = pat_filt;
@@ -99,7 +99,7 @@ for n = 1:N.trial
     subI1 = (3*n - 2):(3*n - 1);
     ax(n,1) = subplot(N.trial,3,subI1); cla ; hold on
     title(class(n))
-        h.trial{n} = plot(FLY.(class(n)).time, FLY.(class(n)).body, '.');
+        h.trial{n} = plot(FLY.(class(n)).time, FLY.(class(n)).body, '-');
         set(h.trial{n}, {'Color'}, num2cell(cc,2))
     ax(n,1).XLim(1) = -0.02*FLY.(class(n)).time(end);
     
@@ -113,8 +113,8 @@ end
 cellfun(@(x) set(x, 'LineWidth', 0.5, 'MarkerFaceColor', 'none', 'MarkerSize', 2), h.trial)
 set(ax, 'Color', 'none', 'LineWidth', 1)
 % set(ax(1:end-1,1), 'XColor', 'none')
-set(ax(:,2), 'XLim', 200*[-1 1], 'XTick', -180:90:180)
-set(ax(:,1), 'YLim', 200*[-1 1], 'YTick', -180:90:180)
+% set(ax(:,2), 'XLim', 200*[-1 1], 'XTick', -180:90:180)
+% set(ax(:,1), 'YLim', 200*[-1 1], 'YTick', -180:90:180)
 
 linkaxes(ax(:,2), 'xy')
 
@@ -133,9 +133,9 @@ leg.Position = [0.1666    0.4353    0.0997    0.1345];
 % set(ax, 'XLim', [0 100])
 
 %% SAVE
-% disp('Saving...')
+disp('Saving...')
 % savedir = 'E:\DATA\Magno_Data\Multibody';
 % save(fullfile(savedir, [filename '_' datestr(now,'mm-dd-yyyy') '.mat']), ...
 %     'FUNC', 'DATA', 'GRAND', 'FLY', 'D', 'I', 'U', 'N', 'T', '-v7.3')
-% disp('SAVING DONE')
+disp('SAVING DONE')
 end
