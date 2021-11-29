@@ -8,9 +8,9 @@ function [] = make_data(rootdir)
 %       -
 %
 
-% load(fullfile(path, file), 'bAngles', 't_v', 'data', 't_p', 'feedback')
-
-root = 'E:\EXPERIMENTS\MAGNO\Experiment_body_reafferent\gain=0';
+gain = 1;
+root = ['E:\Reafferent_Gain_experiment\gain=' num2str(gain)];
+filename = ['data_gain=' num2str(gain)];
 
 % Select files
 [D,I,N,U,T,~,~,basename] = GetFileData(root,'*.mat',false);
@@ -19,7 +19,7 @@ root = 'E:\EXPERIMENTS\MAGNO\Experiment_body_reafferent\gain=0';
 close all
 clc
 
-% HEAD saccade detection parameters
+% Saccade detection parameters
 sacd.showplot = false;
 sacd.Fc_detect = [10 nan];
 sacd.Fc_ss = [nan nan];
@@ -92,10 +92,10 @@ for n = 1:N.file
     DATA.body{n} = body_filt;
     DATA.error{n} = body_filt - pat_filt;
     
-    body_scd = saccade_all(DATA.body{n}, DATA.time{n}, sacd.thresh, sacd.true_thresh, sacd.Fc_detect, ...
-                                sacd.Fc_ss, sacd.amp_cut, sacd.dur_cut, sacd.direction, sacd.pks, sacd.sacd_length, ...
-                                sacd.min_pkdist, sacd.min_pkwidth, sacd.min_pkprom, ...
-                                sacd.min_pkthresh, sacd.boundThresh, sacd.showplot);
+%     body_scd = saccade_all(DATA.body{n}, DATA.time{n}, sacd.thresh, sacd.true_thresh, sacd.Fc_detect, ...
+%                                 sacd.Fc_ss, sacd.amp_cut, sacd.dur_cut, sacd.direction, sacd.pks, sacd.sacd_length, ...
+%                                 sacd.min_pkdist, sacd.min_pkwidth, sacd.min_pkprom, ...
+%                                 sacd.min_pkthresh, sacd.boundThresh, sacd.showplot);
 end
 
 %% Sort data based on condition
@@ -109,56 +109,10 @@ for n = 1:N.trial
     end
 end
 
-R = 180;
-sz = 10;
-hbins = (-R - sz/2):sz:(R + sz/2); 
-cc = hsv(N.fly);
-
-fig = figure (1); clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', [2 2 8 6])
-clear ax h
-ax = gobjects(N.trial,2);
-for n = 1:N.trial
-    subI1 = (3*n - 2):(3*n - 1);
-    ax(n,1) = subplot(N.trial,3,subI1); cla ; hold on
-    title(class(n))
-        h.trial{n} = plot(FLY.(class(n)).time, FLY.(class(n)).body, '-');
-        set(h.trial{n}, {'Color'}, num2cell(cc,2))
-    ax(n,1).XLim(1) = -0.02*FLY.(class(n)).time(end);
-    
-    ax(n,2) = subplot(N.trial,3,3*n); cla ; hold on
-        for f = 1:N.fly
-            h.hist(n,f) = histogram(FLY.(class(n)).body(:,f), hbins, 'Normalization', 'probability', ...
-                'EdgeColor', 'none', 'FaceColor', cc(f,:));
-        end
-        ax(n,2).YLim(1) = -0.02;
-end
-cellfun(@(x) set(x, 'LineWidth', 0.5, 'MarkerFaceColor', 'none', 'MarkerSize', 2), h.trial)
-set(ax, 'Color', 'none', 'LineWidth', 1)
-% set(ax(1:end-1,1), 'XColor', 'none')
-% set(ax(:,2), 'XLim', 200*[-1 1], 'XTick', -180:90:180)
-% set(ax(:,1), 'YLim', 200*[-1 1], 'YTick', -180:90:180)
-
-linkaxes(ax(:,2), 'xy')
-
-XLabelHC = get(ax(N.trial,1), 'XLabel');
-set(XLabelHC, 'String', 'time (s)')
-
-YLabelHC = get(ax(2,1), 'YLabel');
-set(YLabelHC, 'String', 'body (°)')
-
-YLabelHC = get(ax(2,2), 'YLabel');
-set(YLabelHC, 'String', 'probability')
-
-leg = legend(h.trial{1}, string(1:N.fly));
-leg.Title.String = 'Fly #';
-leg.Position = [0.1666    0.4353    0.0997    0.1345];
-% set(ax, 'XLim', [0 100])
-
 %% SAVE
 disp('Saving...')
-% savedir = 'E:\DATA\Magno_Data\Multibody';
-% save(fullfile(savedir, [filename '_' datestr(now,'mm-dd-yyyy') '.mat']), ...
-%     'FUNC', 'DATA', 'GRAND', 'FLY', 'D', 'I', 'U', 'N', 'T', '-v7.3')
+savedir = 'E:\Reafferent_Gain_experiment\processed';
+save(fullfile(savedir, [filename '_' datestr(now,'mm-dd-yyyy') '.mat']), ...
+    'DATA', 'FLY', 'D', 'I', 'U', 'N', 'T', '-v7.3')
 disp('SAVING DONE')
 end
