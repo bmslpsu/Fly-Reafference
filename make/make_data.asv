@@ -34,7 +34,6 @@ sacd.min_pkwidth = 0.03;
 sacd.min_pkprom = 75;
 sacd.min_pkthresh = 0;
 sacd.boundThresh = [0.2 60];
-sacd.direction = 0;
 
 
 Fs = 93;
@@ -93,7 +92,7 @@ for n = 1:N.file
     DATA.error{n} = body_filt - pat_filt;
     
     body_scd = saccade_all(DATA.body{n}, DATA.time{n}, sacd.thresh, sacd.true_thresh, sacd.Fc_detect, ...
-                                sacd.Fc_ss, sacd.amp_cut, sacd.dur_cut, sacd.direction, sacd.pks, sacd.sacd_length, ...
+                                sacd.Fc_ss, sacd.amp_cut, sacd.dur_cut, 0, sacd.pks, sacd.sacd_length, ...
                                 sacd.min_pkdist, sacd.min_pkwidth, sacd.min_pkprom, ...
                                 sacd.min_pkthresh, sacd.boundThresh, sacd.showplot);
 end
