@@ -15,47 +15,50 @@ if nargin < 4
     showplot = true;
 end
 
+% Remove Nan's
 nanI = isnan(x);
 t = t(~nanI);
 x = x(~nanI);
 
+% Define function to fit
+fit = @(b,x)  b(1).*(sin(2*pi*f*x + b(2))) + b(3);
+
+% Get approximant values for starting points
 yu = max(x);
 yl = min(x);
-yr = (yu - yl);
-% ya = sqrt(yr);
-% yz = x-yu+(yr/2);
-% ym = mean(x);
-fit = @(b,x)  b(1).*(sin(2*pi*f*x + b(2)));
-% fit = @(b,x)  b(1).*cos(2*pi*f*x) + b(2).*cos(2*pi*f*x) + b(3);
+yr = (yu - yl) / 2;
+ym = mean(x);
+x0 = [yr ; 0 ; ym];
+
+% Define cost function
 fcn = @(b) sum((fit(b,t) - x).^2);
-s = fminsearch(fcn, [yr; 0]);
 
-ts = mean(diff(t));
-xp = min(t):(ts / 4):max(t);
+% Minimize cost fucntion and solve for coefficents
+opt = optimset('MaxIter', 1500);
+s = fminsearch(fcn, x0, opt);
 
-% if s(1) >=0 
-%     out.mag = s(1)';
-%     out.phase = s(2);
-% else
-%     out.mag = -s(1)';
-%     out.phase = s(2) + pi;
-% end
-
-% get magnitude and phase
+% Get magnitude, phase, & DC
 out.mag = s(1);
 out.phase = wrapToPi(s(2));
+out.dc = s(3);
 
-% out.dc = s(3);
+% Calculate fit accuracy with R^2
+x_fit = fit(s, t);
+R = corrcoef(x, x_fit);
+R2 = R(1,2).^(2);
+out.R2 = R2;
+
+% Create fit curve
+ts = mean(diff(t));
+xp = min(t):(ts / 4):max(t);
 out.x = xp;
 out.fit = fit(s,xp);
 
-% out.gain = sqrt(s(1)^(2) + s(2)^(2));
-% out.phase = rad2deg( atan2(s(2), s(1)) );
-% out.dc = s(3);
+% Plot
 if showplot
-    figure
     hold on
-    plot(t, x, '.b')
+    title(['R^2 = ' num2str(R2)])
+    plot(t, x, '.k')
     plot(out.x, out.fit, 'r', 'LineWidth', 1)
     grid
 end
