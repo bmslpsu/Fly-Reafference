@@ -9,7 +9,7 @@ function [] = make_data_sine()
 %
 
 gamma_folder = -1;
-fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
+fpath = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Data\Experiment_reafferent_sine';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
 filename = ['data_gamma=' num2str(gamma_folder)];
 
@@ -275,8 +275,8 @@ ax(1,1) = subplot(2,4,1:3); cla ; hold on ; ylabel('Body (°)')
     yline(37.5, '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 1)
     yline(-37.5, '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 1)
     plot(FLY.base.time, nanmean(FLY.base.body,2), 'Color', cc.base,  'LineWidth', lw)
-    plot(FLY.learn.time + 40, nanmean(FLY.learn.body,2), 'Color', cc.learn, 'LineWidth', lw)
-    plot(FLY.relearn.time + 40 + 900 + 20, nanmean(FLY.relearn.body,2), 'Color', cc.relearn, 'LineWidth', lw)
+    plot(FLY.learn.time + 50, nanmean(FLY.learn.body,2), 'Color', cc.learn, 'LineWidth', lw)
+    plot(FLY.relearn.time + 40 + 900 + 30, nanmean(FLY.relearn.body,2), 'Color', cc.relearn, 'LineWidth', lw)
     
 ax(1,2) = subplot(2,4,4); cla ; hold on
     h.hist(1,1) = histogram(FLY.base.body, bins, 'FaceColor', cc.base);
@@ -301,7 +301,7 @@ linkaxes(ax(:,1), 'xy')
 linkaxes(ax(1,:), 'y')
 linkaxes(ax(2,:), 'y')
 
-set(ax(:,1), 'XLim', [-20 40*2+900 + 300])
+set(ax(:,1), 'XLim', [-40 1300], 'XTick', 0:100:1400)
 set(ax, 'YLim', 55*[-1 1], 'YTick', -50:10:50)
 % ax(1,2).XLim(1) = -0.05*ax(1,2).XLim(2);
 % ax(2,2).XLim(1) = -0.05*ax(2,2).XLim(2);
@@ -312,13 +312,14 @@ set(ax(1,1), 'XColor', 'none')
 %% Gain, phase & compensation error in time
 clss = ["base", "learn", "relearn"];
 metric = ["gain", "phase", "compensation_error"];
+n_clss = length(clss);
 n_metric = length(metric);
 data = [];
 for k = 1:n_metric
-    data(f).G = [];
-    data(f).(metric(k)) = [];
-    for n = 1:length(clss)
-       	for f = 1:N.fly
+    for f = 1:N.fly
+        data(f).(metric(k)) = [];
+        data(f).G = [];
+       	for n = 1:n_clss
             temp = FLY.(clss(n)).H(f).(metric(k));
             nanI = ~isnan(temp);
             temp = temp(nanI);
@@ -330,37 +331,60 @@ end
 
 
 fig = figure (2) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 5 4])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 3 4])
+movegui(fig, 'center')
 clear ax h
 lw = 1;
 cc.base = [0.9 0 0];
 cc.learn = [0 0.7 1];
 cc.relearn = [0 0.6 0.1];
 
+rng(1)
+spread = 0.3;
 p = 1;
 for k = 1:n_metric
     for f = 1:N.fly
         ax(k,f) = subplot(n_metric,N.fly,p); cla ; hold on
         if f == 1
-            ylabel(metric(k))
+            ylabel(metric(k), 'Interpreter', 'none')
         end
         
         if k == 1
            title(['fly ' num2str(f)]) 
         end
         
-        boxplot(data(f).(metric(k)), data(f).G)
+        plotdata = data(f).(metric(k));
+        if strcmp(metric(k), 'phase')
+            plotdata = rad2deg(plotdata);
+        end
         
+        % Plot
+        bx = boxplot(plotdata, data(f).G, ...
+            'Width', 0.5, 'Symbol', '', 'OutlierSize', 0.5);
+        h = get(bx(5,:),{'XData','YData'});
+        for c = 1:size(h,1)
+           patch(h{c,1},h{c,2}, cc.(clss(c)), 'EdgeColor', 'none', 'FaceAlpha', 1);
+        end
+        set(findobj(ax(k,f),'tag','Median'), 'Color', 'w','LineWidth', 1);
+        set(findobj(ax(k,f),'tag','Box'), 'Color', 'none');
+        set(findobj(ax(k,f),'tag','Upper Whisker'), 'Color', 'k','LineStyle','-');
+        set(findobj(ax(k,f),'tag','Lower Whisker'), 'Color', 'k','LineStyle','-');
+        ax(k,f).Children = ax(k,f).Children([end 1:end-1]);
+        
+        %jitter = rand(size(data(f).G)) * spread - (spread/2);
+        %plot(data(f).G + jitter, plotdata, '.', 'Color', [0.5 0.5 0.5 0.1], 'MarkerSize', 2)
         
         p =  p + 1;
     end
 end
 
-set(ax, 'Color', 'none', 'LineWidth', 1)
+set(ax, 'Color', 'none', 'LineWidth', 1, 'Box', 'off', 'XColor', 'none')
+set(ax(1,:), 'YLim', [0 1.3])
+set(ax(2,:), 'YLim', [-20 5])
+set(ax(3,:), 'YLim', [0 1])
 % set(ax(:,1), 'XLim', [-0.3 round(range(win_time))])
 % set(ax, 'YLim', 55*[-1 1], 'YTick', -50:25:50)
 % set(ax(1:end-1), 'XColor', 'none')
-
 
 %% SAVE
 % disp('Saving...')
