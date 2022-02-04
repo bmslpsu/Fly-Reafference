@@ -1,20 +1,14 @@
 function [] = make_data_sine()
 %% make_data_sine:
 %
-%   INPUTS:
-%       rootdir    	:   root directory
-%
-%   OUTPUTS:
-%       -
-%
 
 gamma_folder = -1;
-fpath = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Data\Experiment_reafferent_sine';
+fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
-filename = ['data_gamma=' num2str(gamma_folder)];
+filename = ['SS_gamma_' num2str(gamma_folder)];
 
 % Select files
-[D,I,N,U,T,~,~,basename] = GetFileData(root,'*.mat', false, 'fly', 'trial', 'gamma');
+[D,I,N,U,~,~,~,basename] = GetFileData(root,'*.mat', false, 'fly', 'trial', 'gamma');
 
 %% Get Data
 warning('off', 'signal:findpeaks:largeMinPeakHeight')
@@ -29,7 +23,7 @@ sacd.amp_cut = 25;
 sacd.dur_cut = inf;
 sacd.thresh = [0, 1, 4, 300];
 sacd.true_thresh = 275;
-sacd.sacd_length = 3;
+sacd.sacd_length = 2;
 sacd.pks = [];
 sacd.min_pkdist = 0.1;
 sacd.min_pkwidth = 0.03;
@@ -45,32 +39,24 @@ Fc = 3;
 
 win_size = 10;
 overlap = 5;
-R2_cut = 0.7;
+R2_cut = 0.5;
 
 DATA = [D(:,1:3) , splitvars(table(num2cell(zeros(N.file,15))))];
 DATA.Properties.VariableNames(4:end) = {'time', 'function', 'body', 'body_raw', 'body_intrp', ...
     'error', 'display', 'function_display', 'error_display', 'head', 'body_saccade', 'camera_times', ...
     'H', 'G', 'H_prediction'};
+% TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
+TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
 for n = 1:N.file
     %disp(kk)
     disp(basename{n})
         
     % Get system properties
     gamma = D.gamma(n); % gamma (coupling gain between fly body and display)
-    gain = -1 + gamma; % total gain (natural + coupling)
+    %gain = -1 + gamma; % total gain (natural + coupling)
     
     % Make time vector
-    switch D.trial(n)
-        case 1
-            T = 30;
-        case 2
-            T = 905;
-        case 3
-            T = 305;
-        otherwise
-            error('file name error')
-    end
-   	tintrp = (0:1/Fs:T)';
+    tintrp = (0:1/Fs:TimePeriods(D.trial(n)))';
     
     % Recreate the input sine function
     freq = 0.5;
@@ -155,21 +141,37 @@ for n = 1:N.file
     
     % Get the gain, phase, & complex response of the closed-loop response
     H.time = body_lssa.time;
+    H.R2 = body_lssa.R2;
     H.gain = body_lssa.magnitude ./ input_lssa.magnitude;
     H.phase = body_lssa.phase - input_lssa.phase;
     H.complex = H.gain .* exp(1i*H.phase);
-    H.compensation_error = abs( (1 + 0*1i) + gain*H.complex );
+    H.compensation_error = abs( (1 + 0*1i) + H.complex*(-1 + gamma));
     
     % Calculate the open-loop response
-    G.complex = H.complex ./ (1 - H.complex*(1 - gamma));
+    G.complex = H.complex ./ (1 + H.complex*(-1 + gamma));
     G.gain = abs(G.complex);
     G.phase = angle(G.complex);
     
-    % Calculate the predicted closed-loop response for gamma=0
-    H_prediction.complex = G.complex ./ (1 + G.complex);
+    % Calculate the predicted closed-loop response
+    if D.trial(n)==2 % learning phase where gamma does not equal 0
+        gamma_pred = 0; % make prediciton for gamma=0
+    else % baseline or relearn phase where gamma=0
+        gamma_pred = gamma_folder; % make prediciton for gamma
+    end
+    H_prediction.complex = G.complex ./ (1 - G.complex*(-1 + gamma_pred));
     H_prediction.gain = abs(H_prediction.complex);
     H_prediction.phase = angle(H_prediction.complex);
-    H_prediction.compensation_error = abs( (1 + 0*1i) - H_prediction.complex);
+    H_prediction.compensation_error = abs( (1 + 0*1i) + H_prediction.complex*(-1 + gamma_pred));
+    
+    % Fit linear trends to the transforms
+    fit_line_fields = ["gain", "phase", "compensation_error" ];
+    for k = 1:length(fit_line_fields)
+        fd = fit_line_fields(k);
+        H.fit_line.(fd) = fit_line(H.time, H.(fd), false);
+        if ~strcmp(fd, fit_line_fields(3)) % no compensation error for G
+            G.fit_line.(fd) = fit_line(H.time, G.(fd), false);
+        end
+    end
     
     % Store system ID data
     DATA.H{n} = H;
@@ -186,7 +188,7 @@ for n = 1:N.file
 %         plot(DATA.time{n}, DATA.body{n}, 'r')
 %         plot(DATA.time{n}, DATA.error{n}, 'g')
 %         %plot(DATA.time{n},DATA.error_display{n}, 'c')
-% 	%pause
+% 	pause
 end
 
 %% Sort data based on condition
@@ -197,7 +199,6 @@ for n = 1:N.trial
     FLY.(clss(n)).all = DATA(DATA.trial == n, :);
     for d = 1:length(names)
         FLY.(clss(n)).(names(d)) = cat(2, FLY.(clss(n)).all.(names(d)){:});
-        %FLY.(clss(n)).(names(d)) = FLY.(clss(n)).all.(names(d));
     end
 end
 
@@ -211,7 +212,7 @@ bins = 0:bin_size:(bin_range + bin_size/2);
 camera_times_all = 1000*(cat(1,DATA.camera_times{:}));
 h = histogram(camera_times_all, bins, 'Normalization', 'probability', ...
     'EdgeColor', 'none', 'FaceColor', [0.5 0.5 0.5]);
-xline(median(camera_times_all), 'k', 'LineWidth', 1)
+xline(median(camera_times_all), 'k', 'LineWidth', 1);
 title(median(camera_times_all))
 
 ylabel('probability')
@@ -229,7 +230,7 @@ cc.base = [0.9 0 0];
 cc.learn = [0 0.7 1];
 cc.relearn = [0 0.6 0.1];
 
-winI = 1 + round(0*Fs):round(10*Fs);
+winI = Fs*0 + (round(0*Fs):round(10*Fs)) + 1;
 win_time = FLY.base.time(winI);
 win_time = win_time - win_time(1);
 cc.error = [112 96 167]./255;
@@ -248,60 +249,74 @@ ax(3,1) = subplot(3,1,3); cla ; hold on ; ylabel('(°)') ; xlabel('time (s)')
     plot(win_time, nanmean(FLY.relearn.body(winI,1),2), 'Color', cc.relearn,  'LineWidth', lw)
     plot(win_time, nanmean(FLY.relearn.error(winI,1),2), 'Color', cc.error,  'LineWidth', lw)
     
-    
 set(ax, 'Color', 'none', 'LineWidth', 1)
 set(ax(:,1), 'XLim', [-0.3 round(range(win_time))])
 set(ax, 'YLim', 55*[-1 1], 'YTick', -50:25:50)
 set(ax(1:end-1), 'XColor', 'none')
 
-
 %% Body, error full time
 fig = figure (2) ; clf
 set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1.5*[2 2 5 2])
 clear ax h
-lw = 0.5;
 cc.base = [0.9 0 0];
 cc.learn = [0 0.7 1];
 cc.relearn = [0 0.6 0.1];
+
+clss = ["base", "learn", "relearn"];
+n_clss = length(clss);
+time_space = 30;
 
 bin_size = 1;
 bin_range = 50;
 bins = -(bin_range + bin_size/2):bin_size:(bin_range + bin_size/2);
 
-tt = (0:0.001:40+900+20+300)';
-func = 37.5*sin(2*pi*0.5*tt);
+% func = 37.5*sin(2*pi*0.5*tt);
 ax(1,1) = subplot(2,4,1:3); cla ; hold on ; ylabel('Body (°)')
     %plot(tt, func, 'Color', [0.5 0.5 0.5], 'LineWidth', lw)
-    yline(37.5, '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 1)
-    yline(-37.5, '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 1)
-    plot(FLY.base.time, nanmean(FLY.base.body,2), 'Color', cc.base,  'LineWidth', lw)
-    plot(FLY.learn.time + 50, nanmean(FLY.learn.body,2), 'Color', cc.learn, 'LineWidth', lw)
-    plot(FLY.relearn.time + 40 + 900 + 30, nanmean(FLY.relearn.body,2), 'Color', cc.relearn, 'LineWidth', lw)
+    yline(37.5, '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 1);
+    yline(-37.5, '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 1);
+    for n = 1:n_clss
+        if n > 1
+            window_shift = sum(TimePeriods(1:n-1));
+        else
+            window_shift = 0;
+        end
+        time_shift = FLY.(clss(n)).time(:,1) + time_space*(n-1) + window_shift;
+        h.body(1,n) = plot(time_shift, nanmean(FLY.(clss(n)).body,2), 'Color', cc.(clss(n)));
+    end
     
 ax(1,2) = subplot(2,4,4); cla ; hold on
-    h.hist(1,1) = histogram(FLY.base.body, bins, 'FaceColor', cc.base);
-    h.hist(1,2) = histogram(FLY.learn.body, bins, 'FaceColor', cc.learn);
-    h.hist(1,3) = histogram(FLY.relearn.body, bins, 'FaceColor', cc.relearn);
+    for n = 1:n_clss
+        h.hist(1,n) = histogram(FLY.(clss(n)).body, bins, 'FaceColor', cc.(clss(n)));
+    end
     
 ax(2,1) = subplot(2,4,5:7); cla ; hold on ; ylabel('Error (°)')
-    plot(FLY.base.time, nanmean(FLY.base.error,2), 'Color', cc.base,  'LineWidth', lw)
-    plot(FLY.learn.time + 40, nanmean(FLY.learn.error,2), 'Color', cc.learn, 'LineWidth', lw)
-    plot(FLY.relearn.time + 40 + 900 + 20, nanmean(FLY.relearn.error,2), 'Color', cc.relearn, 'LineWidth', lw)
+    for n = 1:n_clss
+        if n > 1
+            window_shift = sum(TimePeriods(1:n-1));
+        else
+            window_shift = 0;
+        end
+        time_shift = FLY.(clss(n)).time(:,1) + time_space*(n-1) + window_shift;
+        h.error(1,n) = plot(time_shift, nanmean(FLY.(clss(n)).error,2), 'Color', cc.(clss(n)));
+    end
     xlabel('time (s)')
     
 ax(2,2) = subplot(2,4,8); cla ; hold on
-    h.hist(2,1) = histogram(FLY.base.error, bins, 'FaceColor', cc.base);
-    h.hist(2,2) = histogram(FLY.learn.error, bins, 'FaceColor', cc.learn);
-    h.hist(2,3) = histogram(FLY.relearn.error, bins, 'FaceColor', cc.relearn);
-    
+    for n = 1:n_clss
+        h.hist(2,n) = histogram(FLY.(clss(n)).error, bins, 'FaceColor', cc.(clss(n)));
+    end
     
 set(ax, 'Color', 'none', 'LineWidth', 1)
 set(h.hist, 'Normalization', 'probability', 'EdgeColor', 'none', 'Orientation', 'horizontal')
-linkaxes(ax(:,1), 'xy')
+
 linkaxes(ax(1,:), 'y')
 linkaxes(ax(2,:), 'y')
+linkaxes(ax(:,1), 'xy')
 
-set(ax(:,1), 'XLim', [-40 1300], 'XTick', 0:100:1400)
+set([h.body , h.error], 'LineWidth', 0.5)
+
+set(ax(:,1), 'XLim', [-20 1300], 'XTick', 0:100:1300)
 set(ax, 'YLim', 55*[-1 1], 'YTick', -50:10:50)
 % ax(1,2).XLim(1) = -0.05*ax(1,2).XLim(2);
 % ax(2,2).XLim(1) = -0.05*ax(2,2).XLim(2);
@@ -311,7 +326,7 @@ set(ax(1,1), 'XColor', 'none')
 
 %% Gain, phase & compensation error in time
 clss = ["base", "learn", "relearn"];
-metric = ["gain", "phase", "compensation_error"];
+metric = ["gain", "phase", "compensation_error", "R2"];
 n_clss = length(clss);
 n_metric = length(metric);
 data = [];
@@ -331,13 +346,14 @@ end
 
 
 fig = figure (2) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 3 4])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1.5*[2 2 3 4])
 movegui(fig, 'center')
 clear ax h
-lw = 1;
+
 cc.base = [0.9 0 0];
 cc.learn = [0 0.7 1];
 cc.relearn = [0 0.6 0.1];
+cc.R2 = [0 0 0];
 
 rng(1)
 spread = 0.3;
@@ -380,16 +396,17 @@ end
 
 set(ax, 'Color', 'none', 'LineWidth', 1, 'Box', 'off', 'XColor', 'none')
 set(ax(1,:), 'YLim', [0 1.3])
-set(ax(2,:), 'YLim', [-20 5])
+set(ax(2,:), 'YLim', [-30 5])
 set(ax(3,:), 'YLim', [0 1])
+set(ax(4,:), 'YLim', [0 1])
 % set(ax(:,1), 'XLim', [-0.3 round(range(win_time))])
 % set(ax, 'YLim', 55*[-1 1], 'YTick', -50:25:50)
 % set(ax(1:end-1), 'XColor', 'none')
 
 %% SAVE
-% disp('Saving...')
-% savedir = 'E:\Reafferent_Gain_experiment\processed';
-% save(fullfile(savedir, [filename '_' datestr(now,'mm-dd-yyyy') '.mat']), ...
-%     'DATA', 'FLY', 'D', 'I', 'U', 'N', 'T', '-v7.3')
-% disp('SAVING DONE')
+disp('Saving...')
+savedir = 'E:\DATA\Reafferent';
+save(fullfile(savedir, [filename '_' datestr(now,'mm-dd-yyyy') '.mat']), ...
+    'DATA', 'FLY', 'D', 'I', 'U', 'N', '-v7.3')
+disp('SAVING DONE')
 end

@@ -87,12 +87,12 @@ if showplot
         ylim([0 5*ceil(max(out.magnitude)/5)])
         ylabel('magnitude')
     ax(2) = subplot(4,1,2); cla ; hold on
-        plot(out.time, out.phase, 'or-', 'LineWidth', 1)
-        ylim([-pi pi])
+        plot(out.time, rad2deg(out.phase), 'or-', 'LineWidth', 1)
+        ylim(180*[-1 1])
         ylabel('phase (rad)')
     ax(3) = subplot(4,1,3); cla ; hold on
         plot(out.time, out.dc, 'og-', 'LineWidth', 1)
-        ylim([-pi pi])
+        %ylim([-pi pi])
         ylabel('DC')
     ax(4) = subplot(4,1,4); cla ; hold on
         plot(out.time, out.R2, 'ok-', 'LineWidth', 1)
