@@ -1,6 +1,7 @@
 function [] = SS_gain_phase()
 %% SS_gain_phase:
-root = 'E:\DATA\Reafferent';
+% root = 'E:\DATA\Reafferent';
+root = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Data';
 [FILE,PATH] = uigetfile({'*.mat'},'Select data', root, 'MultiSelect', 'on');
 FILE = string(FILE);
 n_file = length(FILE);
@@ -16,51 +17,55 @@ end
 %% Get data
 clc
 clearvars -except ALL gamma
-gI = 1;
-fI = 2;
-
 clss = ["base", "learn", "relearn"];
 switch_clss = ["learn", "base", "learn"];
 TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
+
 n_clss = length(clss);
 n_clm = n_clss + 1;
+n_gamma = length(ALL);
 
 metric = ["gain", "phase", "compensation_error"];
 n_metric = length(metric);
 
-stats_data = [];
-for m = 1:n_metric
-    for f = 1:ALL{gI}.N.fly
-        stats_data(f).(metric(m)) = [];
-        stats_data(f).G = [];
-        
-        % Main data from baseline, learning, realearning
-       	for n = 1:n_clss
-            main_data = ALL{gI}.FLY.(clss(n)).H(f).(metric(m));
-            nanI = ~isnan(main_data);
-            main_data = main_data(nanI);
-            stats_data(f).(metric(m)) = [stats_data(f).(metric(m)) ; main_data];
-            stats_data(f).G = [stats_data(f).G ; n*ones(size(main_data))];
+for g = 1:n_gamma
+    ALL{g}.stats_data = [];
+    for m = 1:n_metric
+        for f = 1:ALL{g}.N.fly
+            ALL{g}.stats_data(f).(metric(m)) = [];
+            ALL{g}.stats_data(f).G = [];
+
+            % Main data from baseline, learning, realearning
+            for n = 1:n_clss
+                main_data = ALL{g}.FLY.(clss(n)).H(f).(metric(m));
+                nanI = ~isnan(main_data);
+                main_data = main_data(nanI);
+                ALL{g}.stats_data(f).(metric(m)) = [ALL{g}.stats_data(f).(metric(m)) ; main_data];
+                ALL{g}.stats_data(f).G = [ALL{g}.stats_data(f).G ; n*ones(size(main_data))];
+            end
+
+            % Prediction data
+            for n = 1:n_clss
+                pred_data = ALL{g}.FLY.(clss(n)).H_prediction(f).(metric(m));
+                nanI = ~isnan(pred_data);
+                pred_data = pred_data(nanI);
+                ALL{g}.stats_data(f).(metric(m)) = [ALL{g}.stats_data(f).(metric(m)) ; pred_data];
+                ALL{g}.stats_data(f).G = [ALL{g}.stats_data(f).G ; (n_clss + n)*ones(size(pred_data))];
+            end
+
+            % Stats
+            [~,~,stats] = kruskalwallis(ALL{g}.stats_data(f).(metric(m)), ALL{g}.stats_data(f).G, 'off');
+            P = multcompare(stats, 'CType', 'bonferroni', 'Display', 'off');
+            P = P(:,[1:2,end]);
+            ALL{g}.stats_data(f).P.(metric(m)) = P;
         end
-        
-        % Prediction data
-        for n = 1:n_clss
-            pred_data = ALL{gI}.FLY.(clss(n)).H_prediction(f).(metric(m));
-            nanI = ~isnan(pred_data);
-            pred_data = pred_data(nanI);
-            stats_data(f).(metric(m)) = [stats_data(f).(metric(m)) ; pred_data];
-            stats_data(f).G = [stats_data(f).G ; (n_clss + n)*ones(size(pred_data))];
-        end
-        
-        % Stats
-        [~,~,stats] = kruskalwallis(stats_data(f).(metric(m)), stats_data(f).G, 'off');
-        P = multcompare(stats, 'CType', 'bonferroni', 'Display', 'off');
-        P = P(:,[1:2,end]);
-        stats_data(f).P.(metric(m)) = P;
     end
 end
 
 %% Plot
+gI = 1; % gamma #
+fI = 1; % fly #
+
 fig = figure (1) ; clf
 set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1.5*[2 2 9 4])
 movegui(fig, 'center')
@@ -112,13 +117,13 @@ for m = 1:n_metric
     % Boxplot
     subI = subI + 1;
     ax(m,n_clm) = subplot(n_metric,n_clm,subI); cla ; hold on ; ylabel(metric(m), 'Interpreter', 'none')
-        plotdata = stats_data(fI).(metric(m));
+        plotdata = ALL{g}.stats_data(fI).(metric(m));
         if strcmp(metric(m), 'phase')
             plotdata = rad2deg(plotdata);
         end
         
         % Plot
-        bx = boxplot(plotdata, stats_data(fI).G, ...
+        bx = boxplot(plotdata, ALL{g}.stats_data(fI).G, ...
             'Width', 0.8, 'Symbol', '', 'OutlierSize', 0.5);
         h = get(bx(5,:),{'XData','YData'});
         for c = 1:3
