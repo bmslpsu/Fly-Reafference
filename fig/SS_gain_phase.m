@@ -19,7 +19,7 @@ clc
 clearvars -except ALL gamma
 clss = ["base", "learn", "relearn"];
 switch_clss = ["learn", "base", "learn"];
-TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
+TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
 
 n_clss = length(clss);
 n_clm = n_clss + 1;
@@ -141,8 +141,8 @@ end
 set(ax, 'Color', 'none', 'LineWidth', 1, 'Box', 'off')
 set(ax(:,1:end-1), 'XGrid', 'on', 'YGrid', 'on')
 
-set(ax(1,:), 'YLim', [0 1.5])
-set(ax(2,:), 'YLim', [-40 10])
+set(ax(1,:), 'YLim', [0 2])
+set(ax(2,:), 'YLim', [-60 10])
 set(ax(3,:), 'YLim', [0 1])
 % set(ax(4,:), 'YLim', [0 1])
 
