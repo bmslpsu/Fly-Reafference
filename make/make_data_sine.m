@@ -2,7 +2,7 @@ function [] = make_data_sine()
 %% make_data_sine:
 %
 
-gamma_folder = -1;
+gamma_folder = 0.5;
 fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
 filename = ['SS_gamma_' num2str(gamma_folder)];
@@ -45,8 +45,8 @@ DATA = [D(:,1:3) , splitvars(table(num2cell(zeros(N.file,15))))];
 DATA.Properties.VariableNames(4:end) = {'time', 'function', 'body', 'body_raw', 'body_intrp', ...
     'error', 'display', 'function_display', 'error_display', 'head', 'body_saccade', 'camera_times', ...
     'H', 'G', 'H_prediction'};
-% TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
-TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
+TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
+% TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
 for n = 1:N.file
     %disp(kk)
     disp(basename{n})
