@@ -2,7 +2,7 @@ function [] = make_data_sine()
 %% make_data_sine:
 %
 
-gamma_folder = 0.5;
+gamma_folder = -1;
 fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
 filename = ['SS_gamma_' num2str(gamma_folder)];
@@ -45,8 +45,8 @@ DATA = [D(:,1:3) , splitvars(table(num2cell(zeros(N.file,15))))];
 DATA.Properties.VariableNames(4:end) = {'time', 'function', 'body', 'body_raw', 'body_intrp', ...
     'error', 'display', 'function_display', 'error_display', 'head', 'body_saccade', 'camera_times', ...
     'H', 'G', 'H_prediction'};
-TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
-% TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
+% TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
+TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
 for n = 1:N.file
     %disp(kk)
     disp(basename{n})
@@ -178,17 +178,17 @@ for n = 1:N.file
     DATA.G{n} = G;
     DATA.H_prediction{n} = H_prediction;
      
-%     % Plot
-%     %[out] = fit_sine(DATA.time{n}, DATA.body{n}, 0.5, true);
-%     figure (2) ; clf
-%     subplot(1,1,1) ; cla ; hold on
-%         plot(DATA.time{n}, DATA.function{n}, 'k')
-%         %plot(DATA.time{n}, DATA.body_raw{n}, 'Color', [0.5 0.5 0.5 0.7])
-%         %ssplot(DATA.time{n}, DATA.function_display{n}, '-', 'Color', 'b')
-%         plot(DATA.time{n}, DATA.body{n}, 'r')
-%         plot(DATA.time{n}, DATA.error{n}, 'g')
-%         %plot(DATA.time{n},DATA.error_display{n}, 'c')
-% 	pause
+    % Plot
+    %[out] = fit_sine(DATA.time{n}, DATA.body{n}, 0.5, true);
+    figure (2) ; clf
+    subplot(1,1,1) ; cla ; hold on
+        plot(DATA.time{n}, DATA.function{n}, 'k')
+        %plot(DATA.time{n}, DATA.body_raw{n}, 'Color', [0.5 0.5 0.5 0.7])
+        plot(DATA.time{n}, DATA.function_display{n}, '-', 'Color', 'b')
+        plot(DATA.time{n}, DATA.body{n}, 'r')
+        plot(DATA.time{n}, DATA.error{n}, 'g')
+        plot(DATA.time{n},DATA.error_display{n}, 'c')
+	pause
 end
 
 %% Sort data based on condition
