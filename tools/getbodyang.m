@@ -1,4 +1,4 @@
-function [norm_ang, imgprop] = getbodyang(frame,  prev_ang)
+function [norm_ang, imgprop] = getbodyang(frame, prev_ang)
 %% getbodyang: gets the body angle of a fly in a frame
 %
 %   INPUTS:
@@ -27,7 +27,7 @@ imgprop = regionprops(bw,'Centroid','Area','BoundingBox','Orientation', ...
 
 % Pick out the body (object with largest area)
 [~,sort_area] = sort([imgprop.Area],'descend');
-bodyI = sort_area(1); 
+bodyI = sort_area(1);
 imgprop = imgprop(bodyI);
 
 % Get the angle

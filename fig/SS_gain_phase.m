@@ -1,7 +1,7 @@
 function [] = SS_gain_phase()
 %% SS_gain_phase:
-% root = 'E:\DATA\Reafferent';
-root = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Data';
+root = 'E:\DATA\Reafferent';
+% root = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Data';
 [FILE,PATH] = uigetfile({'*.mat'},'Select data', root, 'MultiSelect', 'on');
 FILE = string(FILE);
 n_file = length(FILE);
@@ -88,7 +88,7 @@ for m = 1:n_metric
                 errdata = rad2deg(errdata);
             end
             h = shadedErrorBar([0 TimePeriods(n)], plotdata, errdata, ...
-                'lineProps', {'Color', 0.7*cc.(switch_clss(n)), 'LineWidth', 0.1});
+                'lineProps', {'Color', 0.7*cc.(switch_clss(n)), 'LineWidth', 1.5});
         
             % Raw data
             plotdata = ALL{gI}.FLY.(clss(n)).H(fI).(metric(m));
@@ -141,7 +141,7 @@ end
 set(ax, 'Color', 'none', 'LineWidth', 1, 'Box', 'off')
 set(ax(:,1:end-1), 'XGrid', 'on', 'YGrid', 'on')
 
-set(ax(1,:), 'YLim', [0 2])
+set(ax(1,:), 'YLim', [0 6.5])
 set(ax(2,:), 'YLim', [-60 10])
 set(ax(3,:), 'YLim', [0 1])
 % set(ax(4,:), 'YLim', [0 1])

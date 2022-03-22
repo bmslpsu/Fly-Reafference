@@ -2,7 +2,7 @@ function [] = make_data_sine()
 %% make_data_sine:
 %
 
-gamma_folder = -1;
+gamma_folder = 0.5;
 fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
 filename = ['SS_gamma_' num2str(gamma_folder)];
@@ -45,8 +45,8 @@ DATA = [D(:,1:3) , splitvars(table(num2cell(zeros(N.file,15))))];
 DATA.Properties.VariableNames(4:end) = {'time', 'function', 'body', 'body_raw', 'body_intrp', ...
     'error', 'display', 'function_display', 'error_display', 'head', 'body_saccade', 'camera_times', ...
     'H', 'G', 'H_prediction'};
-% TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
-TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
+TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
+% TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
 for n = 1:N.file
     %disp(kk)
     disp(basename{n})
@@ -55,18 +55,19 @@ for n = 1:N.file
     gamma = D.gamma(n); % gamma (coupling gain between fly body and display)
     %gain = -1 + gamma; % total gain (natural + coupling)
     
+    % Load DAQ, body, head, & wing data
+	all_data = load(fullfile(root, [basename{n} '.mat']),...
+        'data','t_p', 'bAngles', 't_v', 'ampl', 'freq'); % load data
+    
     % Make time vector
     tintrp = (0:1/Fs:TimePeriods(D.trial(n)))';
     
     % Recreate the input sine function
-    freq = 0.5;
-    A = 37.5;
+    freq = all_data.freq;
+    A = all_data.ampl;
     Phi = 0;
     func = A*sin(2*pi*freq*tintrp + Phi);
     func = func - mean(func);
-    
-    % Load DAQ, body, head, & wing data
-	all_data = load(fullfile(root, [basename{n} '.mat']),'data','t_p', 'bAngles', 't_v'); % load data
 
     % Sync video and display data
     daq_time = all_data.t_p;
@@ -267,7 +268,7 @@ n_clss = length(clss);
 time_space = 30;
 
 bin_size = 1;
-bin_range = 50;
+bin_range = 200;
 bins = -(bin_range + bin_size/2):bin_size:(bin_range + bin_size/2);
 
 % func = 37.5*sin(2*pi*0.5*tt);
@@ -317,7 +318,7 @@ linkaxes(ax(:,1), 'xy')
 set([h.body , h.error], 'LineWidth', 0.5)
 
 set(ax(:,1), 'XLim', [-20 1300], 'XTick', 0:100:1300)
-set(ax, 'YLim', 55*[-1 1], 'YTick', -50:10:50)
+set(ax, 'YLim', 125*[-1 1], 'YTick', -100:25:100)
 % ax(1,2).XLim(1) = -0.05*ax(1,2).XLim(2);
 % ax(2,2).XLim(1) = -0.05*ax(2,2).XLim(2);
 
