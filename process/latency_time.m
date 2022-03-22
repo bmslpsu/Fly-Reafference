@@ -1,5 +1,5 @@
 function [latency] = latency_time(root, n_use_frame)
-%% getbodyang: gets the body angle of a fly in a frame
+% getbodyang: gets the body angle of a fly in a frame
 %
 %   INPUTS:
 %       root      	: root folder
@@ -17,20 +17,20 @@ end
 FILE = string(FILE);
 n_file = length(FILE);
 
-if isempty(n_use_frame)
-   n_use_frame = V.NumFrames;
-end
-
 savedir = fullfile(PATH, 'latency');
 mkdir(savedir)
 for n = 1:n_file
     fpath = fullfile(PATH, FILE(n));
     V = VideoReader(fpath);
+
+    if isempty(n_use_frame)
+       n_use_frame = V.NumFrames;
+    end
     
     latency = nan(n_use_frame,1);
     ang = nan;
     for f = 1:n_use_frame
-        if ~mod(f,10)
+        if ~mod(f,100)
             fprintf('%i \n', f)
         end
         frame = read(V, f);
