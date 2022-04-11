@@ -1,4 +1,4 @@
-function [out] = lssq_sliding(t, x, f, win_size, overlap, R2_cut, showfits, showplot)
+function [out] = lssq_sliding(t, x, f, win_size, overlap, n_detrend, R2_cut, showfits, showplot)
 %% lssq_sliding: perform a sliding window least-squares-spectral-analysis (LSSA)
 %
 %   INPUTS:
@@ -7,19 +7,23 @@ function [out] = lssq_sliding(t, x, f, win_size, overlap, R2_cut, showfits, show
 %       f           : [nx1] frequencies to fit [Hz]
 %       win_size   	: window size for LSSA
 %       overlap   	: window overlap
-%       showplot  	: (boolean) show fit plots
+%       n_detrend   : order of polynomial to detrend with
+%       showfits  	: (boolean) show fit plots
 %       showplot  	: (boolean) show final magnitude & phase plot if true
 %
 %   OUTPUTS:
 %       out         : analysis output
 %
 
-if nargin < 8
+if nargin < 9
     showplot = true;
-    if nargin < 7
+    if nargin < 8
         showfits = false;
         if nargin < 7
-           R2_cut = 0.7; 
+           n_detrend = [];
+            if nargin < 6
+               R2_cut = 0.7; 
+            end
         end
     end
 end
@@ -56,6 +60,11 @@ for k = 1:n_win
         % Get data in window to fit
         t_win = t(winI);
         x_win = x(winI);
+        
+        % Detrend window
+        if ~isempty(n_detrend)
+            x_win = detrend(x_win, n_detrend);
+        end
         
         % Fit data
         fit_out = fit_sine(t_win, x_win, f, showfits);

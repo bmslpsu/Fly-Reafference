@@ -2,8 +2,9 @@ function [] = make_data_sine()
 %% make_data_sine:
 %
 
-gamma_folder = 0.5;
-fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
+gamma_folder = 0.75;
+% fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
+fpath = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Manuscripts\Reafferent\data';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
 filename = ['SS_gamma_' num2str(gamma_folder)];
 
@@ -23,7 +24,7 @@ sacd.amp_cut = 25;
 sacd.dur_cut = inf;
 sacd.thresh = [0, 1, 4, 300];
 sacd.true_thresh = 275;
-sacd.sacd_length = 2;
+sacd.sacd_length = 1;
 sacd.pks = [];
 sacd.min_pkdist = 0.1;
 sacd.min_pkwidth = 0.03;
@@ -45,8 +46,9 @@ DATA = [D(:,1:3) , splitvars(table(num2cell(zeros(N.file,15))))];
 DATA.Properties.VariableNames(4:end) = {'time', 'function', 'body', 'body_raw', 'body_intrp', ...
     'error', 'display', 'function_display', 'error_display', 'head', 'body_saccade', 'camera_times', ...
     'H', 'G', 'H_prediction'};
-TimePeriods = [125 905 905]; % times for [baseline, learn, relearn]
+TimePeriods = [110 860 225]; % times for [baseline, learn, relearn]
 % TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
+n_detrend = [];
 for n = 1:N.file
     %disp(kk)
     disp(basename{n})
@@ -97,6 +99,7 @@ for n = 1:N.file
 %     clf
 
    	% Body
+    %body_filt = filtfilt(b_low, a_low, body_scd.shift.IntrpPosition);
     body_filt = filtfilt(b_low, a_low, body_scd.position);
     body_filt = filtfilt(b_high, a_high, body_filt);
     body_filt = body_filt - mean(body_filt);
@@ -136,8 +139,10 @@ for n = 1:N.file
     DATA.function_display{n} = pat_func;
     
     % Sliding LSSA
-    body_lssa = lssq_sliding(DATA.time{n}, DATA.body{n}, freq, win_size, overlap, R2_cut, false, false);
-    input_lssa = lssq_sliding(DATA.time{n}, DATA.function{n}, freq, win_size, overlap, R2_cut, false, false);
+    body_lssa = lssq_sliding(DATA.time{n}, DATA.body{n}, freq, ...
+        win_size, overlap, n_detrend, R2_cut, false, false);
+    input_lssa = lssq_sliding(DATA.time{n}, DATA.function{n}, freq, ...
+        win_size, overlap, [], R2_cut, false, false);
     %error_lssa = lssq_sliding(DATA.time{n}, DATA.error{n}, freq, win_size, overlap, R2_cut, false, true);
     
     % Get the gain, phase, & complex response of the closed-loop response
@@ -205,7 +210,7 @@ end
 
 %% Camera times
 fig = figure (1) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', [2 2 2 1.5])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 2*[2 2 2 1.5])
 ax = subplot(1,1,1); cla ; hold on
 bin_size = 0.05;
 bin_range = 50;
@@ -219,10 +224,11 @@ title(median(camera_times_all))
 ylabel('probability')
 xlabel('processing time (ms)')
 
-set(ax, 'Color', 'none', 'LineWidth', 1, 'XLim', [10 15], 'XTick', 10:1:15)
-set(ax, 'YLim', [-0.005 0.08])
+set(ax, 'Color', 'none', 'LineWidth', 1, 'XLim', [0 20], 'XTick', 1:1:20)
+% set(ax, 'YLim', [-0.005 0.08])
 
 %% Body, error time
+clc
 fig = figure (2) ; clf
 set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 5 4])
 clear ax h
@@ -231,28 +237,36 @@ cc.base = [0.9 0 0];
 cc.learn = [0 0.7 1];
 cc.relearn = [0 0.6 0.1];
 
-winI = Fs*0 + (round(0*Fs):round(10*Fs)) + 1;
-win_time = FLY.base.time(winI);
-win_time = win_time - win_time(1);
 cc.error = [112 96 167]./255;
 ax(1,1) = subplot(3,1,1); cla ; hold on ; ylabel('(°)')
+    winI = round(Fs*4 + (round(0*Fs):round(6*Fs)) + 1);
+    win_time = FLY.base.time(winI);
+    win_time = win_time - win_time(1);
+    
     plot(win_time, FLY.base.function(winI,1), 'Color', [0.5 0.5 0.5], 'LineWidth', lw)
     plot(win_time, nanmean(FLY.base.body(winI,1),2), 'Color', cc.base,  'LineWidth', lw)
     plot(win_time, nanmean(FLY.base.error(winI,:),2), 'Color', cc.error,  'LineWidth', lw)
     
 ax(2,1) = subplot(3,1,2); cla ; hold on ; ylabel('(°)')
-    plot(win_time, FLY.base.function(winI,1), 'Color', [0.5 0.5 0.5], 'LineWidth', lw)
+    winI = round(Fs*46 + (round(0*Fs):round(6*Fs)) + 1);
+    win_time = FLY.base.time(winI);
+    win_time = win_time - win_time(1);
+    plot(win_time, FLY.learn.function(winI,1), 'Color', [0.5 0.5 0.5], 'LineWidth', lw)
     plot(win_time, nanmean(FLY.learn.body(winI,1),2), 'Color', cc.learn,  'LineWidth', lw)
     plot(win_time, nanmean(FLY.learn.error(winI,1),2), 'Color', cc.error,  'LineWidth', lw)
     
 ax(3,1) = subplot(3,1,3); cla ; hold on ; ylabel('(°)') ; xlabel('time (s)')
-    plot(win_time, FLY.base.function(winI,1), 'Color', [0.5 0.5 0.5], 'LineWidth', lw)
+    winI = round(Fs*14 + (round(0*Fs):round(6*Fs)) + 1);
+    win_time = FLY.base.time(winI);
+    win_time = win_time - win_time(1);
+    
+    plot(win_time, FLY.relearn.function(winI,1), 'Color', [0.5 0.5 0.5], 'LineWidth', lw)
     plot(win_time, nanmean(FLY.relearn.body(winI,1),2), 'Color', cc.relearn,  'LineWidth', lw)
     plot(win_time, nanmean(FLY.relearn.error(winI,1),2), 'Color', cc.error,  'LineWidth', lw)
     
 set(ax, 'Color', 'none', 'LineWidth', 1)
 set(ax(:,1), 'XLim', [-0.3 round(range(win_time))])
-set(ax, 'YLim', 55*[-1 1], 'YTick', -50:25:50)
+% set(ax, 'YLim', 100*[-1 1], 'YTick', -100:25:100)
 set(ax(1:end-1), 'XColor', 'none')
 
 %% Body, error full time
@@ -347,7 +361,7 @@ end
 
 
 fig = figure (2) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1.5*[2 2 3 4])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1.7*[2 2 3 5])
 movegui(fig, 'center')
 clear ax h
 
@@ -375,29 +389,33 @@ for k = 1:n_metric
             plotdata = rad2deg(plotdata);
         end
         
+%         jitter = rand(size(data(f).G)) * spread - (spread/2);
+%         plot(data(f).G + jitter, plotdata, '.', ...
+%             'Color', [0.5 0.5 0.5 0.1], 'MarkerSize', 4, 'MarkerFaceColor', 'none')
+        
         % Plot
         bx = boxplot(plotdata, data(f).G, ...
             'Width', 0.5, 'Symbol', '', 'OutlierSize', 0.5);
         h = get(bx(5,:),{'XData','YData'});
         for c = 1:size(h,1)
-           patch(h{c,1},h{c,2}, cc.(clss(c)), 'EdgeColor', 'none', 'FaceAlpha', 1);
+           patch(h{c,1},h{c,2}, cc.(clss(c)), 'EdgeColor', 'none', 'FaceAlpha', 0.5);
         end
-        set(findobj(ax(k,f),'tag','Median'), 'Color', 'w','LineWidth', 1);
+        set(findobj(ax(k,f),'tag','Median'), 'Color', [0.3 0.2 0.7],'LineWidth', 2);
         set(findobj(ax(k,f),'tag','Box'), 'Color', 'none');
+        uistack(findobj(ax(k,f),'tag','Box'), 'bottom');
         set(findobj(ax(k,f),'tag','Upper Whisker'), 'Color', 'k','LineStyle','-');
         set(findobj(ax(k,f),'tag','Lower Whisker'), 'Color', 'k','LineStyle','-');
         ax(k,f).Children = ax(k,f).Children([end 1:end-1]);
         
-        %jitter = rand(size(data(f).G)) * spread - (spread/2);
-        %plot(data(f).G + jitter, plotdata, '.', 'Color', [0.5 0.5 0.5 0.1], 'MarkerSize', 2)
+
         
         p =  p + 1;
     end
 end
 
 set(ax, 'Color', 'none', 'LineWidth', 1, 'Box', 'off', 'XColor', 'none')
-set(ax(1,:), 'YLim', [0 1.3])
-set(ax(2,:), 'YLim', [-30 5])
+set(ax(1,:), 'YLim', [0 3.5])
+set(ax(2,:), 'YLim', [-50 20])
 set(ax(3,:), 'YLim', [0 1])
 set(ax(4,:), 'YLim', [0 1])
 % set(ax(:,1), 'XLim', [-0.3 round(range(win_time))])
