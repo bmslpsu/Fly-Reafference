@@ -42,6 +42,12 @@ out.mag = s(1);
 out.phase = wrapToPi(s(2));
 out.dc = s(3);
 
+% Correct for negative gain fits
+if out.mag < 0
+    out.mag = -out.mag;
+    out.phase = out.phase - pi;
+end
+
 % Calculate fit accuracy with R^2
 x_fit = fit(s, t);
 R = corrcoef(x, x_fit);

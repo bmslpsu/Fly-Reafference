@@ -35,7 +35,7 @@ for g = 1:n_gamma
             ALL{g}.stats_data(f).(metric(m)) = [];
             ALL{g}.stats_data(f).G = [];
 
-            % Main data from baseline, learning, realearning
+            % Main data from baseline, learning, relearning
             for n = 1:n_clss
                 main_data = ALL{g}.FLY.(clss(n)).H(f).(metric(m));
                 nanI = ~isnan(main_data);

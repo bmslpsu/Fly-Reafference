@@ -42,10 +42,10 @@ out.R2 = R2;
 out.P = P(1,2);
 
 % Create fit curve
-ts = mean(diff(x));
-xp = min(x):(ts / 4):max(x);
-out.x = xp;
-out.fit = fit(s,xp);
+% ts = mean(diff(x));
+% xp = min(x):max(x);
+out.x = x;
+out.fit = fit(s,out.x);
 
 % Plot
 if showplot
