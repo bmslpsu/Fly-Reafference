@@ -49,8 +49,8 @@ out.fit = cell(n_win,1);
 % Sliding LSSQ
 for k = 1:n_win
     %disp(k)
-    startI = (1 + shift_index*(k-1)); % shift start point by overlap size
-    endI = startI + win_index; % end point extends from start to the window size
+    startI = round((1 + shift_index*(k-1))); % shift start point by overlap size
+    endI = round(startI + win_index); % end point extends from start to the window size
     winI = startI:endI; % window
     
     if any(winI > n_point)
