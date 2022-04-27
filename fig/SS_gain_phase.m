@@ -13,6 +13,8 @@ for n = 1:length(FILE)
     gamma(n) = str2double(finfo(3));
     ALL{n} = load(fullfile(PATH,FILE(n)),'FLY','DATA','U','N');
 end
+[gamma, gI] = sort(gamma);
+ALL = ALL(gI);
 
 %% Get data
 clc
@@ -63,8 +65,8 @@ for g = 1:n_gamma
 end
 
 %% Plot
-gI = 1; % gamma #
-fI = 1; % fly #
+gI = 4; % gamma #
+fI = 2; % fly #
 
 fig = figure (1) ; clf
 set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1.5*[2 2 9 4])
@@ -117,13 +119,13 @@ for m = 1:n_metric
     % Boxplot
     subI = subI + 1;
     ax(m,n_clm) = subplot(n_metric,n_clm,subI); cla ; hold on ; ylabel(metric(m), 'Interpreter', 'none')
-        plotdata = ALL{g}.stats_data(fI).(metric(m));
+        plotdata = ALL{gI}.stats_data(fI).(metric(m));
         if strcmp(metric(m), 'phase')
             plotdata = rad2deg(plotdata);
         end
         
         % Plot
-        bx = boxplot(plotdata, ALL{g}.stats_data(fI).G, ...
+        bx = boxplot(plotdata, ALL{gI}.stats_data(fI).G, ...
             'Width', 0.8, 'Symbol', '', 'OutlierSize', 0.5);
         h = get(bx(5,:),{'XData','YData'});
         for c = 1:3
@@ -141,7 +143,7 @@ end
 set(ax, 'Color', 'none', 'LineWidth', 1, 'Box', 'off')
 set(ax(:,1:end-1), 'XGrid', 'on', 'YGrid', 'on')
 
-set(ax(1,:), 'YLim', [0 6.5])
+set(ax(1,:), 'YLim', [0 2])
 set(ax(2,:), 'YLim', [-60 10])
 set(ax(3,:), 'YLim', [0 1])
 % set(ax(4,:), 'YLim', [0 1])
@@ -150,8 +152,8 @@ for m = 1:n_metric
    linkaxes(ax(m,:), 'y') 
 end
 
-set(ax(:,2:end-0), 'YColor', 'none')
-set(ax(1:end-1,:), 'XColor', 'none')
-set(ax(end,end), 'XColor', 'none')
+% set(ax(:,2:end-0), 'YColor', 'none')
+% set(ax(1:end-1,:), 'XColor', 'none')
+% set(ax(end,end), 'XColor', 'none')
 
 end

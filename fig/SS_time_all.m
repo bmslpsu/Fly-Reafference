@@ -19,7 +19,7 @@ ALL = ALL(gI);
 clearvars -except ALL gamma
 clc
 
-gI = 4;
+gI = 3;
 
 cc.base = [0.5 0.5 0.5];
 % cc.learn = [0 0.7 1];

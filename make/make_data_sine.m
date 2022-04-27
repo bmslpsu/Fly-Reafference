@@ -2,7 +2,7 @@ function [] = make_data_sine()
 %% make_data_sine:
 %
 
-gamma_folder = 1;
+gamma_folder = 0.75;
 fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 % fpath = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Manuscripts\Reafferent\data';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
@@ -171,6 +171,7 @@ for n = 1:N.file
     else % baseline or relearn phase where gamma=0
         gamma_pred = gamma_folder; % make prediciton for gamma
     end
+    %H_prediction.complex = G.complex ./ (1 - G.complex*(-1 + gamma_pred));
     H_prediction.complex = G.complex ./ (1 - G.complex*(-1 + gamma_pred));
     H_prediction.gain = abs(H_prediction.complex);
     H_prediction.phase = angle(H_prediction.complex);
@@ -199,8 +200,8 @@ for n = 1:N.file
 %         %plot(DATA.time{n}, DATA.body_raw{n}, 'Color', [0.5 0.5 0.5 0.7])
 %         plot(DATA.time{n}, DATA.function_display{n}, '-', 'Color', 'b')
 %         plot(DATA.time{n}, DATA.body{n}, 'r')
-%         plot(DATA.time{n}, DATA.error{n}, 'g')
-%         plot(DATA.time{n},DATA.error_display{n}, 'c')
+%         %plot(DATA.time{n}, DATA.error{n}, 'g')
+%         %plot(DATA.time{n},DATA.error_display{n}, 'c')
 % 	pause
 end
 
