@@ -38,7 +38,7 @@ for m = 1:n_metric
 
     % Boxplot
     if showbox
-        bx = boxplot(Data.(metric(m)), te, ...
+        bx = boxplot(Data.(metric(m)), Data.period, ...
             'Width', 0.6, 'Symbol', '', 'Whisker', 2, 'OutlierSize', 8);
 
         h = get(bx(5,:),{'XData','YData'});
