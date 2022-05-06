@@ -92,4 +92,81 @@ set(ax, 'XLim', [0.5 n_period+0.5], 'XColor', 'none')
 set(ax(1), 'YTick', -0.5:0.1:0.5)
 set(ax(2), 'YTick', -20:10:20)
 
+%% Stats within period
+alpha = 0.05;
+
+period = string(categories(Data.period));
+n_period = length(period);
+
+metric = ["H_gain_slope", "H_phase_slope", ...
+    "H_gain_slope_R2", "H_phase_slope_R2", "H_gain_slope_P", "H_phase_slope_P"];
+n_metric = length(metric);
+
+Stats = [];
+for n = 1:n_period
+    T = Data(Data.period == period(n),:);
+    for m = 1:n_metric
+        [~,pval] = ttest(T.(metric(m)));
+        h_ratio = sum(T.(metric(m)) < alpha) ./ length(T.(metric(m)));
+        
+        Stats.(period(n)).(metric(m)).P = pval;
+        Stats.(period(n)).(metric(m)).mean = mean(T.(metric(m)));
+        Stats.(period(n)).(metric(m)).h_ratio = h_ratio;
+    end
+end
+
+%% Stats for each gamma across periods (ANOVA)
+n_gamma = length(gamma);
+
+metric = ["H_gain_slope", "H_phase_slope", ...
+    "H_gain_slope_R2", "H_phase_slope_R2", "H_gain_slope_P", "H_phase_slope_P"];
+n_metric = length(metric);
+
+Stats = [];
+for m = 1:n_metric
+    Y = Data.(metric(m));
+    G = {Data.period, Data.gamma};
+    pval = anovan(Y, G, 'Display', 'off');
+    Stats.(metric(m)).P = pval;
+end
+
+%% Stats for each gamma across periods (seperate by gamma)
+n_gamma = length(gamma);
+
+metric = ["H_gain_slope", "H_phase_slope", ...
+    "H_gain_slope_R2", "H_phase_slope_R2", "H_gain_slope_P", "H_phase_slope_P"];
+n_metric = length(metric);
+
+Stats = [];
+for g = 1:n_gamma
+    T = Data(Data.gamma == gamma(g),:);
+    %T = T(Data)
+    for m = 1:n_metric
+        Y = T.(metric(m));
+        G = T.period;
+        pval = anova1(Y, G, 'off');
+        Stats.(metric(m))(g).P = pval;
+        %Stats.(metric(m))(g).mean = mean(Y);
+    end
+end
+
+%% Stats within period across gammas
+period = string(categories(Data.period));
+n_period = length(period);
+
+metric = ["H_gain", "H_phase", "H_gain_slope", "H_phase_slope", ...
+    "H_gain_slope_R2", "H_phase_slope_R2", "H_gain_slope_P", "H_phase_slope_P"];
+n_metric = length(metric);
+
+Stats = [];
+for n = 1:n_period
+    T = Data(Data.period == period(n),:);
+    for m = 1:n_metric
+        Y = T.(metric(m));
+        G = {T.gamma};
+        pval = anovan(Y, G, 'Display', 'off');
+        Stats.(period(n)).(metric(m)).P = pval;
+    end
+end
+
 end

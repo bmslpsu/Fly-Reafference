@@ -18,7 +18,7 @@ n_period = length(period);
 metric = ["H_gain_slope_R2", "H_gain_slope_P", "H_phase_slope_R2", "H_phase_slope_P"];
 n_metric = length(metric);
 
-showbox = true;
+showbox = false;
 
 cc.base = [0.7 0 0];
 cc.learn = [0 0.3 1];
@@ -53,16 +53,16 @@ for m = 1:n_metric
         ax(m).Children = ax(m).Children([end 1:end-1]);
     end
     
-%     % Plot data points & lines connecting periods
-%     for g = 1:n_gamma
-%        for f = 1:N_fly(g)
-%            fly_gamma_vector = (Data.gamma == gamma(g)) ...
-%                & (Data.fly == f);
-%            fly_table = Data(fly_gamma_vector,:);
-%            plot(1:n_period, fly_table.(metric(m)), '.-', 'Color', cc.gamma(g,:), 'LineWidth', 0.5, ...
-%                'MarkerFaceColor', 'none', 'MarkerSize', 10)
-%        end        
-%     end
+    % Plot data points & lines connecting periods
+    for g = 1:n_gamma
+       for f = 1:N_fly(g)
+           fly_gamma_vector = (Data.gamma == gamma(g)) ...
+               & (Data.fly == f);
+           fly_table = Data(fly_gamma_vector,:);
+           plot(1:n_period, fly_table.(metric(m)), '.-', 'Color', cc.gamma(g,:), 'LineWidth', 0.5, ...
+               'MarkerFaceColor', 'none', 'MarkerSize', 10)
+       end        
+    end
     
     % Set Y-limits
     if contains(metric(m), 'R2')
