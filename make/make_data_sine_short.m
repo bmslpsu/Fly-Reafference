@@ -1,12 +1,11 @@
-function [] = make_data_sine()
-%% make_data_sine:
+function [] = make_data_sine_short()
+%% make_data_sine_short:
 %
 
-gamma_folder = 0.75;
-fpath = 'S:\Public\Marioalberto Ferrero\Sinusoid_gamma= 0.75\Not calibrated';
+gamma_folder = 1.25;
+fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 % fpath = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Manuscripts\Reafferent\data';
-% root = fullfile(fpath, ['Sinusoid_gamma=' num2str(gamma_folder)]);
-root = fpath;
+root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
 filename = ['SS_gamma_' num2str(gamma_folder)];
 
 % Select files
@@ -47,8 +46,7 @@ DATA = [D(:,1:3) , splitvars(table(num2cell(zeros(N.file,15))))];
 DATA.Properties.VariableNames(4:end) = {'time', 'function', 'body', 'body_raw', 'body_intrp', ...
     'error', 'display', 'function_display', 'error_display', 'head', 'body_saccade', 'camera_times', ...
     'H', 'G', 'H_prediction'};
-TimePeriods = [110 810 110]; % times for [baseline, learn, relearn]
-% TimePeriods = [30 905 305]; % times for [baseline, learn, relearn]
+TimePeriods = [110 110]; % times for [baseline, learn]
 n_detrend = [];
 for n = 1:N.file
     %disp(kk)
@@ -195,8 +193,8 @@ for n = 1:N.file
 %     subplot(1,1,1) ; cla ; hold on
 %         plot(DATA.time{n}, DATA.function{n}, 'k')
 %         %plot(DATA.time{n}, DATA.body_raw{n}, 'Color', [0.5 0.5 0.5 0.7])
-%         plot(DATA.time{n}, DATA.function_display{n}, '-', 'Color', 'r')
-%         %plot(DATA.time{n}, DATA.body{n}, 'r')
+%         plot(DATA.time{n}, DATA.function_display{n}, '-', 'Color', 'b')
+%         plot(DATA.time{n}, DATA.body{n}, 'r')
 %         %plot(DATA.time{n}, DATA.error{n}, 'g')
 %         %plot(DATA.time{n},DATA.error_display{n}, 'c')
 % 	pause
@@ -205,7 +203,7 @@ end
 %% Sort data based on condition
 FLY = [];
 names = string(DATA.Properties.VariableNames(4:end));
-clss = ["base", "learn", "relearn"];
+clss = ["base", "learn"];
 for n = 1:N.trial
     FLY.(clss(n)).all = DATA(DATA.trial == n, :);
     for d = 1:length(names)
@@ -238,8 +236,9 @@ fig = figure (200) ; clf
 set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 3 3])
 clear ax h
 ax = subplot(1,1,1); cla ; hold on
-plot(fv, cat(2, FLY.base.all.body_raw_coherence{:}), 'Color', [0.5 0.5 0.5 1], 'LineWidth', 1)
-plot(fv, cat(2, FLY.learn.all.body_raw_coherence{:}), 'Color', [0 0.6 0.8 1], 'LineWidth', 1)
+    plot(fv, cat(2, FLY.base.all.body_raw_coherence{:}), 'Color', [0.5 0.5 0.5 1], 'LineWidth', 1)
+    plot(fv, cat(2, FLY.learn.all.body_raw_coherence{:}), 'Color', [0 0.6 0.8 1], 'LineWidth', 1)
+    
 set(ax, 'LineWidth', 0.75, 'Color', 'none', 'XGrid', 'on', 'YGrid', 'on', 'Box', 'on')
 ylim([-0.02 1])
 ylabel('Coherence')
@@ -249,15 +248,14 @@ set(ax, 'XScale', 'log', 'XLim', [0.3 1], 'XTick', [0.3 0.5 1 3])
 %% Body, error time
 clc
 fig = figure (2) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 5 4])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 5 3])
 clear ax h
 lw = 1;
 cc.base = [0.9 0 0];
 cc.learn = [0 0.7 1];
-cc.relearn = [0 0.6 0.1];
 fI = 1;
 cc.error = [112 96 167]./255;
-ax(1,1) = subplot(3,1,1); cla ; hold on ; ylabel('(°)')
+ax(1,1) = subplot(2,1,1); cla ; hold on ; ylabel('(°)')
     winI = round(Fs*2 + (round(0*Fs):round(6*Fs)) + 1);
     win_time = FLY.base.time(winI);
     win_time = win_time - win_time(1);
@@ -266,7 +264,7 @@ ax(1,1) = subplot(3,1,1); cla ; hold on ; ylabel('(°)')
     plot(win_time, nanmean(FLY.base.body(winI,fI),2), 'Color', cc.base,  'LineWidth', lw)
     plot(win_time, nanmean(FLY.base.error(winI,fI),2), 'Color', cc.error,  'LineWidth', lw)
     
-ax(2,1) = subplot(3,1,2); cla ; hold on ; ylabel('(°)')
+ax(2,1) = subplot(2,1,2); cla ; hold on ; ylabel('(°)')
     winI = round(Fs*30 + (round(0*Fs):round(6*Fs)) + 1);
     win_time = FLY.base.time(winI);
     win_time = win_time - win_time(1);
@@ -274,31 +272,21 @@ ax(2,1) = subplot(3,1,2); cla ; hold on ; ylabel('(°)')
     plot(win_time, nanmean(FLY.learn.body(winI,fI),2), 'Color', cc.learn,  'LineWidth', lw)
     plot(win_time, nanmean(FLY.learn.error(winI,fI),2), 'Color', cc.error,  'LineWidth', lw)
     
-ax(3,1) = subplot(3,1,3); cla ; hold on ; ylabel('(°)') ; xlabel('time (s)')
-    winI = round(Fs*2 + (round(0*Fs):round(6*Fs)) + 1);
-    win_time = FLY.base.time(winI);
-    win_time = win_time - win_time(1);
-    
-    plot(win_time, FLY.relearn.function(winI,1), 'Color', [0.5 0.5 0.5], 'LineWidth', lw)
-    plot(win_time, nanmean(FLY.relearn.body(winI,fI),2), 'Color', cc.relearn,  'LineWidth', lw)
-    plot(win_time, nanmean(FLY.relearn.error(winI,fI),2), 'Color', cc.error,  'LineWidth', lw)
-    
 set(ax, 'Color', 'none', 'LineWidth', 1)
 set(ax(:,1), 'XLim', [-0.3 round(range(win_time))])
 % set(ax, 'YLim', 100*[-1 1], 'YTick', -100:25:100)
 set(ax(1:end-1), 'XColor', 'none')
 
 %% Body, error full time
-fig = figure (2) ; clf
+fig = figure (3) ; clf
 set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1.5*[2 2 5 2])
 clear ax h
 cc.base = [0.9 0 0];
 cc.learn = [0 0.7 1];
-cc.relearn = [0 0.6 0.1];
 
-clss = ["base", "learn", "relearn"];
+clss = ["base", "learn"];
 n_clss = length(clss);
-time_space = 30;
+time_space = 5;
 
 bin_size = 1;
 bin_range = 200;
@@ -354,7 +342,7 @@ linkaxes(ax(:,1), 'xy')
 
 set([h.body , h.error], 'LineWidth', 0.5)
 
-set(ax(:,1), 'XLim', [-20 1100], 'XTick', 0:100:1300)
+set(ax(:,1), 'XLim', [-5 160], 'XTick', 0:100:1300)
 set(ax, 'YLim', 100*[-1 1], 'YTick', -100:25:100)
 % ax(1,2).XLim(1) = -0.05*ax(1,2).XLim(2);
 % ax(2,2).XLim(1) = -0.05*ax(2,2).XLim(2);
@@ -363,7 +351,7 @@ set(ax(:,2), 'YColor', 'none')
 set(ax(1,1), 'XColor', 'none')
 
 %% Gain, phase & compensation error in time
-clss = ["base", "learn", "relearn"];
+clss = ["base", "learn"];
 metric = ["gain", "phase", "compensation_error", "R2"];
 n_clss = length(clss);
 n_metric = length(metric);

@@ -19,7 +19,7 @@ ALL = ALL(gI);
 clearvars -except ALL gamma
 clc
 
-gI = 3;
+gI = 4;
 
 cc.base = [0.5 0.5 0.5];
 % cc.learn = [0 0.7 1];
@@ -132,8 +132,8 @@ set(ax(3), 'YLim', [0 max([h.gain(:).YData])], 'YTick', 0:1:10)
 set(ax(4), 'YLim', [min([h.phase(:).YData]) max([h.phase(:).YData])])
 set(ax(5), 'YLim', [0 1])
 
-set(ax(3), 'YLim', [0 6])
-set(ax(4), 'YLim', [-150 30])
+% set(ax(3), 'YLim', [0 6])
+% set(ax(4), 'YLim', [-150 30])
 
 % set(ax(:,2), 'YColor', 'none')
 set(ax(1:end-1,1), 'XColor', 'none')
