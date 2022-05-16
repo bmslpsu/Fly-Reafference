@@ -2,7 +2,7 @@ function [] = make_data_sine_short()
 %% make_data_sine_short:
 %
 
-gamma_folder = 1.25;
+gamma_folder = 1.5;
 fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 % fpath = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Manuscripts\Reafferent\data';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
@@ -172,15 +172,15 @@ for n = 1:N.file
     H_prediction.phase = angle(H_prediction.complex);
     H_prediction.compensation_error = abs( (1 + 0*1i) + H_prediction.complex*(-1 + gamma_pred));
     
-    % Fit linear trends to the transforms
-    fit_line_fields = ["gain", "phase", "compensation_error" ];
-    for k = 1:length(fit_line_fields)
-        fd = fit_line_fields(k);
-        H.fit_line.(fd) = fit_line(H.time, H.(fd), false);
-        if ~strcmp(fd, fit_line_fields(3)) % no compensation error for G
-            G.fit_line.(fd) = fit_line(H.time, G.(fd), false);
-        end
-    end
+%     % Fit linear trends to the transforms
+%     fit_line_fields = ["gain", "phase", "compensation_error" ];
+%     for k = 1:length(fit_line_fields)
+%         fd = fit_line_fields(k);
+%         H.fit_line.(fd) = fit_line(H.time, H.(fd), false);
+%         if ~strcmp(fd, fit_line_fields(3)) % no compensation error for G
+%             G.fit_line.(fd) = fit_line(H.time, G.(fd), false);
+%         end
+%     end
     
     % Store system ID data
     DATA.H{n} = H;

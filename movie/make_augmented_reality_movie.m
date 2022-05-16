@@ -6,7 +6,7 @@ clear ; close all ; clc
 
 export = true;
 
-root = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Manuscripts\Reafferent\data\test';
+root = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 rootpat = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Git\Arena\Patterns';
 
 % Select pattern file
@@ -40,7 +40,7 @@ grid on
 [x,~] = ginput(1); % select start point
 close
 start_time = 2*round(x./2); % start time to nearest 2 seconds
-start_frame = round(start_time*Fs); % start frame
+start_frame = round(start_time*Fs) + 1; % start frame
 all_frames = start_frame:(start_frame + n_frame - 1); % all frames
 all_time = data.t_v(all_frames); % all times
 norm_time = all_time - all_time(1); % normalized time
@@ -72,8 +72,13 @@ R = data.ampl*sin(2*pi*data.freq*all_time);
 
 % Compute the visual motion
 gamma = data.gain;
-gamma = 0;
+% gamma = 0;
 V = R + gamma*(B - mean(B));
+
+if gamma > 1
+   B = B - B(1);
+   V = V - V(1);
+end
 
 % Sync video and display data
 D = data.data(:,1);
@@ -92,7 +97,7 @@ V_exp = D_int(all_frames);
 figure ; clf ; hold on ; title('Click if blue & green curves match')
 plot(R - mean(R), 'k', 'LineWidth', 1)
 plot(B - mean(B), 'r', 'LineWidth', 1)
-plot(V_exp - mean(V_exp), 'g', 'LineWidth', 1)
+plot(V_exp - mean(V_exp), 'g', 'LineWidth', 2)
 plot(V - mean(V), 'b', 'LineWidth', 1)
 axis tight
 pause
@@ -176,9 +181,15 @@ ax(1,2) = subplot(1,16,8:16); cla ; hold on
 set(ax(2:end), 'FontSize', 16, 'Color', 'k', 'YColor', 'w', 'XColor', 'w', ...
     'FontWeight', 'bold','LineWidth', 2, 'XLim', [-0.3 round(norm_time(end))])
 set(ax(2:end), 'XTick', 0:10)
-set(ax(2:end), 'YLim', 10*ceil(max(abs([B-mean(B); V-mean(V); R]))./10)*[-1 1])
-set(ax(2:end), 'YTick', -200:20:200)
 set(ax_pat, 'Color', 'none', 'XColor', 'none', 'YColor', 'none')
+
+if gamma > 1
+    %set(ax(2:end), 'YLim', 10*ceil(max(abs([B-mean(B); V-mean(V); R]))./10)*[-1 1])
+    %set(ax(2:end), 'YTick', -200:20:200)
+else
+    set(ax(2:end), 'YLim', 10*ceil(max(abs([B-mean(B); V-mean(V); R]))./10)*[-1 1])
+    set(ax(2:end), 'YTick', -200:20:200)
+end
 
 ax(2).YLabel.FontSize = 20;
 ax(2).XLabel.FontSize = 20;
@@ -213,9 +224,21 @@ for n = 1:n_frame
             'FaceColor', 'none', 'EdgeColor', 'interp', 'LineWidth', pat_thickness);
         
     set(fig, 'CurrentAxes', ax(2)); hold on
+    if gamma > 1
+        addpoints(H.B, norm_time(n), B(n))
+        addpoints(H.R, norm_time(n), R(n))
+        addpoints(H.V, norm_time(n), V(n))
+        ylim(sort([1.1*min(V(1:n))-20 , 1.1*max(V(1:n))+20]))
+%         if mean(V) < 0
+%             ylim(sort([1.1*min(V(1:n)) 1.1*max(V(1:n))]))
+%         else
+%            ylim(sort([-25 1.1*max(V(1:n))])) 
+%         end
+    else
         addpoints(H.B, norm_time(n), B(n) - mean(B))
         addpoints(H.R, norm_time(n), R(n))
         addpoints(H.V, norm_time(n), V(n) - mean(V))
+    end
         
     drawnow
     
