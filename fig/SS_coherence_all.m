@@ -59,7 +59,7 @@ cc.learn = repmat([55 156 235]./255, [n_gamma, 1]);
 % cc.learn = repmat([1 0 0], [n_gamma, 1]);
 
 fig = figure (1) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 1.8 n_gamma*1.6 1.5])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 1.8 n_gamma*1.2 1.5])
 movegui(fig, 'center')
 clear ax h
 ax = gobjects(1,n_gamma);

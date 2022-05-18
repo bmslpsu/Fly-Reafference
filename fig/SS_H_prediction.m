@@ -33,7 +33,7 @@ end
 metric = ["gain", "phase", "compensation_error"];
 n_metric = length(metric);
 
-clss = ["H", "Hpred", "Hlearn"];
+clss = ["Hpred", "Hlearn"];
 n_clss = length(clss);
 
 showbox = true;
@@ -42,7 +42,8 @@ cc.base = [0.7 0 0];
 cc.learn = [0 0.3 1];
 cc.relearn = [0.5 0 1];
 cc.fly = (hsv(5));
-cc_all = [cc.base ; cc.learn ; cc.relearn];
+% cc_all = [cc.base ; cc.learn ; cc.relearn];
+cc_all = [cc.learn ; cc.relearn];
 % cc.gamma = parula(n_gamma);
 
 fig = figure (1) ; clf
@@ -63,7 +64,7 @@ for m = 1:n_metric
            data(:,n) = T_pred{g}.(name);
            G(:,n) = n*ones(size(data(:,n)));
         end
-        [~,P{g}.(metric(m))] = ttest(data(:,2), data(:,3));
+        [~,P{g}.(metric(m))] = ttest(data(:,1), data(:,2));
         %[P{g}.(metric(m))] = ranksum(data(:,2), data(:,3));
         
       	title([num2str(gamma(g)) ', p = ' num2str(P{g}.(metric(m)))])
@@ -112,7 +113,12 @@ end
 set(ax, 'Color', 'none', 'LineWidth', 1, 'FontSize', 8, 'Box', 'off', 'XTickLabelRotation', 45)
 set(ax, 'XColor', 'none')
 
-set(ax(1,1), 'YLim', [0 1.5], 'YTick', 0:0.5:1.5)
+% set(ax(1,1), 'YLim', [0 1.5], 'YTick', 0:0.5:1.5)
+% set(ax(1,2), 'YLim', [0 2], 'YTick', 0:0.5:2)
+% set(ax(1,3), 'YLim', [0 4], 'YTick', 0:1:4)
+% set(ax(1,4), 'YLim', [0 5], 'YTick', 0:1:5)
+
+set(ax(1,1), 'YLim', [0 1], 'YTick', 0:0.5:1)
 set(ax(1,2), 'YLim', [0 2], 'YTick', 0:0.5:2)
 set(ax(1,3), 'YLim', [0 4], 'YTick', 0:1:4)
 set(ax(1,4), 'YLim', [0 5], 'YTick', 0:1:5)

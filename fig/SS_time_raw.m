@@ -68,7 +68,7 @@ cc.base = repmat([0.5 0.5 0.5], [n_gamma, 1]);
 cc.learn = repmat([55 156 235]./255, [n_gamma, 1]);
 
 fig = figure (1) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 n_gamma*1.6 1.5])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 n_gamma*1.2 1.5])
 movegui(fig, 'center')
 clear ax h
 ax = gobjects(1,n_gamma);
@@ -97,7 +97,7 @@ linkaxes(ax, 'xy')
 
 %% Mean Velocity
 fig = figure (2) ; clf
-set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2 1.5 3])
+set(fig, 'Color', 'w', 'Units', 'inches', 'Position', 1*[2 2.5 2.5 3])
 movegui(fig, 'center')
 clear ax h
 ax = gobjects(n_clss,1);
@@ -114,7 +114,7 @@ for n = 1:n_clss
         else
             gg = 2;
         end
-        G = [G ; g*ones(size(data))];
+        G = [G ; gg*ones(size(data))];
     end
     [~,P.(clss(n))] = ttest2(plotdata(G==1), plotdata(G==2));
     
@@ -141,7 +141,8 @@ for n = 1:n_clss
 end
 set(ax, 'Color', 'none', 'LineWidth', 0.75, 'FontSize', 8)
 set(ax, 'Box', 'off')
-set(ax(1), 'XColor', 'none')
+set(ax(1:2), 'XColor', 'none')
+set(ax(2), 'YLim', [0 1400], 'YTick', 0:200:2000)
 
 P
 

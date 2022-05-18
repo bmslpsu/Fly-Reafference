@@ -2,7 +2,7 @@ function [] = make_data_sine_short()
 %% make_data_sine_short:
 %
 
-gamma_folder = 1.5;
+gamma_folder = 1.1;
 fpath = 'E:\EXPERIMENTS\MAGNO\Experiment_reafferent_sine';
 % fpath = 'Q:\OneDrive - PSU\OneDrive - The Pennsylvania State University\Research\Manuscripts\Reafferent\data';
 root = fullfile(fpath, ['gamma=' num2str(gamma_folder)]);
